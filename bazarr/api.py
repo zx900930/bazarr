@@ -253,6 +253,36 @@ class SystemReleases(Resource):
         return jsonify(data=releases)
 
 
+class GetSeries(Resource):
+    def get(self):
+        root_dir = request.args.get('root_dir')
+        series = []
+        if root_dir:
+            from series_indexer import list_series_directories
+            series = list_series_directories(root_dir=root_dir)
+        return jsonify(data=series)
+
+
+class GetSeriesMatch(Resource):
+    def get(self):
+        directory = request.args.get('directory')
+        series_match = {}
+        if directory:
+            from series_indexer import get_series_match
+            series_match = get_series_match(directory=directory)
+        return jsonify(data=series_match)
+
+
+class GetSeriesMetadata(Resource):
+    def get(self):
+        tmdbid = request.args.get('tmdbid')
+        series_metadata = {}
+        if tmdbid:
+            from series_indexer import get_series_metadata
+            series_metadata = get_series_metadata(tmdbid=tmdbid)
+        return jsonify(data=series_metadata)
+
+
 class Series(Resource):
     @authenticate
     def get(self, **kwargs):
@@ -1796,6 +1826,9 @@ api.add_resource(SystemProviders, '/systemproviders')
 api.add_resource(SystemStatus, '/systemstatus')
 api.add_resource(SystemReleases, '/systemreleases')
 
+api.add_resource(GetSeries, '/get_series')
+api.add_resource(GetSeriesMatch, '/get_series_match')
+api.add_resource(GetSeriesMetadata, '/get_series_metadata')
 api.add_resource(Series, '/series')
 api.add_resource(SeriesEditSave, '/series_edit_save')
 api.add_resource(Episodes, '/episodes')
