@@ -253,6 +253,12 @@ class SystemReleases(Resource):
         return jsonify(data=releases)
 
 
+class GetSeriesRootDir(Resource):
+    def get(self):
+        series_root_dir = database.execute("SELECT * FROM table_rootdir")
+        return jsonify(data=series_root_dir)
+
+
 class GetSeries(Resource):
     def get(self):
         root_dir = request.args.get('root_dir')
@@ -1826,6 +1832,7 @@ api.add_resource(SystemProviders, '/systemproviders')
 api.add_resource(SystemStatus, '/systemstatus')
 api.add_resource(SystemReleases, '/systemreleases')
 
+api.add_resource(GetSeriesRootDir, '/get_series_root_dir')
 api.add_resource(GetSeries, '/get_series')
 api.add_resource(GetSeriesMatch, '/get_series_match')
 api.add_resource(GetSeriesMetadata, '/get_series_metadata')

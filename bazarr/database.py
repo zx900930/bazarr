@@ -147,6 +147,10 @@ def db_upgrade():
     database.execute("CREATE TABLE IF NOT EXISTS table_blacklist_movie (radarr_id integer, timestamp integer, "
                      "provider text, subs_id text, language text)")
 
+    # Create root_directories tables
+    database.execute("CREATE TABLE IF NOT EXISTS table_rootdir (id INTEGER PRIMARY KEY, path text)")
+    database.execute("CREATE TABLE IF NOT EXISTS table_rootdir_movie (id INTEGER PRIMARY KEY, path text)")
+
 
 def filter_exclusions(dicts_list, type):
     if type == 'series':

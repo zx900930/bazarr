@@ -2,28 +2,36 @@ import os
 import re
 import logging
 import tmdbsimple as tmdb
+from database import database
+
 tmdb.API_KEY = 'e5577e69d409c601acb98d5bfcee31c7'
 
 
 def list_series_directories(root_dir):
     series_directories = []
 
-    for i, directory_temp in enumerate(os.listdir(root_dir)):
-        directory_original = re.sub(r"\(\b(19|20)\d{2}\b\)", '', directory_temp).rstrip()
-        directory = re.sub(r"\s\b(19|20)\d{2}\b", '', directory_original).rstrip()
-        if directory.endswith(', The'):
-            directory = 'The ' + directory.rstrip(', The')
-        elif directory.endswith(', A'):
-            directory = 'A ' + directory.rstrip(', A')
-        if not directory.startswith('.'):
-            series_directories.append(
-                {
-                    'directory': directory_original,
-                    'root_dir': root_dir
-                }
-            )
-
-    return series_directories
+    try:
+        root_dir_path = database.execute("SELECT path FROM table_rootdir WHERE id=?", (root_dir,),
+                                         only_one=True)['path']
+    except:
+        pass
+    else:
+        for i, directory_temp in enumerate(os.listdir(root_dir_path)):
+            directory_original = re.sub(r"\(\b(19|20)\d{2}\b\)", '', directory_temp).rstrip()
+            directory = re.sub(r"\s\b(19|20)\d{2}\b", '', directory_original).rstrip()
+            if directory.endswith(', The'):
+                directory = 'The ' + directory.rstrip(', The')
+            elif directory.endswith(', A'):
+                directory = 'A ' + directory.rstrip(', A')
+            if not directory.startswith('.'):
+                series_directories.append(
+                    {
+                        'directory': directory_original,
+                        'root_dir': root_dir
+                    }
+                )
+    finally:
+        return series_directories
 
 
 def get_series_match(directory):
