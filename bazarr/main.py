@@ -212,13 +212,13 @@ def serieseditor():
     return render_template('serieseditor.html')
 
 
-@app.route('/seriesimport/')
+@app.route('/series/import/')
 @login_required
 def seriesimport():
     return render_template('seriesimport.html')
 
 
-@app.route('/seriesimport/<no>')
+@app.route('/series/import/<no>')
 @login_required
 def seriesimportno(no):
     return render_template('seriesimportno.html', id=str(no))

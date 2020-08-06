@@ -1,0 +1,76 @@
+{% extends '_main.html' %}
+
+{% block title %}Import (Series) - Bazarr{% endblock %}
+
+{% block bcleft %}
+
+{% endblock bcleft %}
+
+{% block bcright %}
+
+{% endblock bcright %}
+
+{% block body %}
+    <table id="import_series" class="table table-striped" style="width:100%">
+        <thead>
+        <tr>
+            <th>Directory</th>
+            <th>Series</th>
+        </tr>
+        </thead>
+    </table>
+{% endblock body %}
+
+{% block tail %}
+    <script>
+        $(document).ready(function () {
+            $('#series_nav').addClass("active");
+            $('#series_import_nav').addClass("active");
+
+            var table = $('#import_series').DataTable({
+                language: {
+                    zeroRecords: 'No Directories In This Root Directory'
+                },
+                searching: false,
+                ordering: false,
+                lengthChange: false,
+                responsive: true,
+                paging: false,
+                ajax: "{{ url_for('api.getseries') }}?root_dir={{id}}",
+                columns: [
+                    {
+                        data: "directory",
+                        width: "50%"
+                    },
+                    {
+                        data: null,
+                        render: function (data) {
+                            return '<select id="series_' + data.id + '" class="selectpicker" data-directory="' + data.directory + '" data-width="100%"></select>';
+                        },
+                        width: "50%"
+                    }
+                ],
+                initComplete: function() {
+                    $('.selectpicker').selectpicker('refresh');
+                    $('.selectpicker').each( function() {
+                        getSeries($(this).attr('data-directory'), $(this).attr('id'));
+                    })
+                }
+            });
+        });
+
+        function getSeries(directory, id) {
+            $.ajax({
+                url: "{{ url_for('api.getseriesmatch') }}?directory=" + directory,
+                success: function (data) {
+                    $('#'+id).empty();
+                    $.each(data.data, function (i, item) {
+                        $('#'+id).append('<option value="' + item.tmdbid + '" data-subtext="(' + item.year + ')">' + item.title + '</option>');
+                    });
+                    $('#'+id).selectpicker({'showSubtext': true});
+                    $('#'+id).selectpicker("refresh");
+                }
+            });
+        }
+    </script>
+{% endblock tail %}

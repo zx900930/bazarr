@@ -1,0 +1,74 @@
+{% extends '_main.html' %}
+
+{% block title %}Import (Series) - Bazarr{% endblock %}
+
+{% block bcleft %}
+
+{% endblock bcleft %}
+
+{% block bcright %}
+
+{% endblock bcright %}
+
+{% block body %}
+    <table id="rootdir_series" class="table table-striped" style="width:100%">
+        <thead>
+        <tr>
+            <th>Path</th>
+            <th></th>
+        </tr>
+        </thead>
+    </table>
+{% endblock body %}
+
+{% block tail %}
+    <script>
+        $(document).ready(function () {
+            $('#series_nav').addClass("active");
+            $('#series_import_nav').addClass("active");
+
+            var table = $('#rootdir_series').DataTable({
+                language: {
+                    zeroRecords: 'No Root Directories Defined For Series'
+                },
+                searching: false,
+                ordering: false,
+                lengthChange: false,
+                responsive: true,
+                paging: false,
+                ajax: "{{ url_for('api.getseriesrootdir') }}",
+                columns: [
+                    {
+                        data: null,
+                        render: function (data) {
+                            return '<a href="{{ url_for('seriesimport') }}' + data.id + '">' + data.path + '</a>';
+                        }
+                    },
+                    {
+                        data: null,
+                        render: function (data) {
+                            return '<a href="" class="remove_root_dir badge badge-secondary" data-toggle="tooltip" data-placement="right" title="Remove this root directory" data-root_dir_id="' + data.id + '"><i class="fas fa-trash"></i></a>';
+                        }
+                    }
+                ]
+            });
+
+            $('#rootdir_series').on('click', '.remove_root_dir', function (e) {
+                $(this).tooltip('dispose');
+                e.preventDefault();
+                const values = {
+                    root_dir_id: $(this).attr('data-root_dir_id')
+                };
+                $.ajax({
+                    url: "{{ url_for('api.blacklistepisodesubtitlesadd') }}",
+                    type: "DELETE",
+                    dataType: "json",
+                    data: values,
+                    success: function () {
+                        $('#rootdir_series').DataTable().ajax.reload(resetPaging = false);
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock tail %}

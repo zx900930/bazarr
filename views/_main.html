@@ -209,8 +209,11 @@
                 <nav class="sidebar-nav">
                     <ul id="sidebarnav">
                         {% if settings.general.getboolean('use_sonarr') %}
-                            <li id="series_nav"><a href="{{ url_for('series') }}"><i class="fas fa-play"></i><span
-                                    class="hide-menu"> Series</span></a>
+                            <li id="series_nav"><a href="#"><i class="fas fa-play"></i><span class="hide-menu"> Series</span></a>
+                                <ul aria-expanded="false" class="collapse">
+                                    <li><a href="{{ url_for('series') }}"> List</a></li>
+                                    <li id="series_import_nav"><a href="{{ url_for('seriesimport') }}"> Import</a></li>
+                                </ul>
                             </li>
                         {% endif %}
 

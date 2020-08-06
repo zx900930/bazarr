@@ -26,7 +26,8 @@ def list_series_directories(root_dir):
             if not directory.startswith('.'):
                 series_directories.append(
                     {
-                        'directory': directory_original,
+                        'id': i,
+                        'directory': directory_temp,
                         'root_dir': root_dir
                     }
                 )
@@ -35,6 +36,10 @@ def list_series_directories(root_dir):
 
 
 def get_series_match(directory):
+    directory_temp = directory
+    directory_original = re.sub(r"\(\b(19|20)\d{2}\b\)", '', directory_temp).rstrip()
+    directory = re.sub(r"\s\b(19|20)\d{2}\b", '', directory_original).rstrip()
+
     search = tmdb.Search()
     try:
         series_temp = search.tv(query=directory)
@@ -50,7 +55,7 @@ def get_series_match(directory):
                 matching_series.append(
                     {
                         'title': item['name'],
-                        'year': year,
+                        'year': year or 'n/a',
                         'tmdbid': item['id']
                     }
                 )
