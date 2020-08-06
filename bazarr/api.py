@@ -30,7 +30,7 @@ from list_subtitles import store_subtitles, store_subtitles_movie, series_scan_s
     list_missing_subtitles, list_missing_subtitles_movies
 from utils import history_log, history_log_movie, blacklist_log, blacklist_delete, blacklist_delete_all, \
     blacklist_log_movie, blacklist_delete_movie, blacklist_delete_all_movie, get_sonarr_version, get_radarr_version, \
-    delete_subtitles
+    delete_subtitles, subtitles_apply_mods
 from get_providers import get_providers, get_providers_auth, list_throttled_providers, reset_throttled_providers
 from event_handler import event_stream
 from scheduler import scheduler
@@ -124,6 +124,7 @@ class Notifications(Resource):
             database.execute("UPDATE table_settings_notifier SET enabled = ?, url = ? WHERE name = ?",
                              (item['enabled'], item['url'], item['name']))
 
+        save_settings(zip(request.form.keys(), request.form.listvalues()))
         return '', 204
 
 
@@ -642,7 +643,8 @@ class EpisodesSubtitlesManualDownload(Resource):
                 subs_id = result[6]
                 subs_path = result[7]
                 history_log(2, sonarrSeriesId, sonarrEpisodeId, message, path, language_code, provider, score, subs_id, subs_path)
-                send_notifications(sonarrSeriesId, sonarrEpisodeId, message)
+                if not settings.general.getboolean('dont_notify_manual_actions'):
+                    send_notifications(sonarrSeriesId, sonarrEpisodeId, message)
                 store_subtitles(path, episodePath)
             return result, 201
         except OSError:
@@ -689,7 +691,8 @@ class EpisodesSubtitlesUpload(Resource):
                 provider = "manual"
                 score = 360
                 history_log(4, sonarrSeriesId, sonarrEpisodeId, message, path, language_code, provider, score, subtitles_path=subs_path)
-                send_notifications(sonarrSeriesId, sonarrEpisodeId, message)
+                if not settings.general.getboolean('dont_notify_manual_actions'):
+                    send_notifications(sonarrSeriesId, sonarrEpisodeId, message)
                 store_subtitles(path, episodePath)
 
             return result, 201
@@ -1093,7 +1096,8 @@ class MovieSubtitlesManualDownload(Resource):
                 subs_id = result[6]
                 subs_path = result[7]
                 history_log_movie(2, radarrId, message, path, language_code, provider, score, subs_id, subs_path)
-                send_notifications_movie(radarrId, message)
+                if not settings.general.getboolean('dont_notify_manual_actions'):
+                    send_notifications_movie(radarrId, message)
                 store_subtitles_movie(path, moviePath)
             return result, 201
         except OSError:
@@ -1139,7 +1143,8 @@ class MovieSubtitlesUpload(Resource):
                 provider = "manual"
                 score = 120
                 history_log_movie(4, radarrId, message, path, language_code, provider, score, subtitles_path=subs_path)
-                send_notifications_movie(radarrId, message)
+                if not settings.general.getboolean('dont_notify_manual_actions'):
+                    send_notifications_movie(radarrId, message)
                 store_subtitles_movie(path, moviePath)
 
             return result, 201
@@ -1524,9 +1529,8 @@ class WantedSeries(Resource):
                                 "table_episodes.sonarrEpisodeId, table_episodes.scene_name, table_shows.tags, "
                                 "table_episodes.failedAttempts, table_shows.seriesType FROM table_episodes INNER JOIN "
                                 "table_shows on table_shows.sonarrSeriesId = table_episodes.sonarrSeriesId WHERE "
-                                "table_episodes.missing_subtitles != '[]' ORDER BY table_episodes._rowid_ DESC LIMIT ? "
-                                "OFFSET ?", (length, start))
-        data = filter_exclusions(data, 'series')
+                                "table_episodes.missing_subtitles != '[]' ORDER BY table_episodes._rowid_ DESC")
+        data = filter_exclusions(data, 'series')[int(start):int(start)+int(length)]
 
         for item in data:
             # Parse missing subtitles
@@ -1563,8 +1567,8 @@ class WantedMovies(Resource):
         row_count = len(data_count)
         data = database.execute("SELECT title, missing_subtitles, radarrId, path, hearing_impaired, sceneName, "
                                 "failedAttempts, tags, monitored FROM table_movies WHERE missing_subtitles != '[]' "
-                                "ORDER BY _rowid_ DESC LIMIT ? OFFSET ?", (length, start))
-        data = filter_exclusions(data, 'movie')
+                                "ORDER BY _rowid_ DESC")
+        data = filter_exclusions(data, 'movie')[int(start):int(start)+int(length)]
 
         for item in data:
             # Parse missing subtitles
@@ -1780,6 +1784,18 @@ class SyncSubtitles(Resource):
         return '', 200
 
 
+class SubMods(Resource):
+    @authenticate
+    def post(self):
+        language = request.form.get('language')
+        subtitles_path = request.form.get('subtitlesPath')
+        mod = request.form.get('mod')
+
+        subtitles_apply_mods(language, subtitles_path, [mod])
+
+        return '', 200
+
+
 class BrowseBazarrFS(Resource):
     @authenticate
     def get(self):
@@ -1880,6 +1896,7 @@ api.add_resource(BlacklistMovieSubtitlesRemove, '/blacklist_movie_subtitles_remo
 api.add_resource(BlacklistMovieSubtitlesRemoveAll, '/blacklist_movie_subtitles_remove_all')
 
 api.add_resource(SyncSubtitles, '/sync_subtitles')
+api.add_resource(SubMods, '/sub_mods')
 
 api.add_resource(BrowseBazarrFS, '/browse_bazarr_filesystem')
 api.add_resource(BrowseSonarrFS, '/browse_sonarr_filesystem')
