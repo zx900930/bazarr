@@ -3,7 +3,7 @@
 {% block title %}Import (Series) - Bazarr{% endblock %}
 
 {% block bcleft %}
-
+    <div id="buttons"></div>
 {% endblock bcleft %}
 
 {% block bcright %}
@@ -14,11 +14,43 @@
     <table id="import_series" class="table table-striped" style="width:100%">
         <thead>
         <tr>
+            <th></th>
             <th>Directory</th>
             <th>Series</th>
         </tr>
         </thead>
     </table>
+
+    <nav id="edit_bar" class="navbar fixed-bottom navbar-dark bg-dark">
+        <div class="form-check form-check-inline">
+            <div class="form-group" style="margin-bottom: 0px;">
+                <label for="languages_select">Language(s): </label>
+                <select class="selectpicker" id="languages_select" name="languages" title="No change" multiple></select>
+            </div>
+        </div>
+        <div class="form-check form-check-inline">
+            <div class="form-group" style="margin-bottom: 0px;">
+                <label for="hi_select">Hearing-Impaired: </label>
+                <select class="selectpicker show-tick" id="hi_select" name="hi" title="No change" multiple>
+                    <option value="False">False</option>
+                    <option value="True">True</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-check form-check-inline">
+            <div class="form-group" style="margin-bottom: 0px;">
+                <label for="forced_select">Forced: </label>
+                <select class="selectpicker show-tick" id="forced_select" name="forced" title="No change" multiple>
+                    <option value="False">False</option>
+                    <option value="True">True</option>
+                    <option value="Both">Both</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-check form-check-inline">
+            <button type="submit" class="btn btn-info" id="save_button">Save</button>
+        </div>
+    </nav>
 {% endblock body %}
 
 {% block tail %}
@@ -37,7 +69,17 @@
                 responsive: true,
                 paging: false,
                 ajax: "{{ url_for('api.getseries') }}?root_dir={{id}}",
+                columnDefs: [{
+                    orderable: false,
+                    className: 'select-checkbox',
+                    targets: 0
+                }],
+                select: {
+                    style: 'multi',
+                    selector: 'td:first-child'
+                },
                 columns: [
+                    {defaultContent: ""},
                     {
                         data: "directory",
                         width: "50%"
@@ -57,6 +99,34 @@
                     })
                 }
             });
+
+            new $.fn.dataTable.Buttons(table, {
+                buttons: [
+                    {
+                        extend: 'selectAll',
+                        text: '<div><i class="far fa-check-square align-top text-themecolor text-center font-20" aria-hidden="true"></i></div>\n' +
+                            '            <div class="align-bottom text-themecolor small text-center">Select ALL</div>'
+                    },
+                    {
+                        extend: 'selectNone',
+                        text: '<div><i class="far fa-square align-top text-themecolor text-center font-20" aria-hidden="true"></i></div>\n' +
+                            '            <div class="align-bottom text-themecolor small text-center nowrap">Deselect ALL</div>'
+                    }]
+            });
+
+            table.buttons().container().appendTo('#buttons');
+
+            var btns = $('.dt-button');
+            btns.addClass('btn btn-outline');
+            btns.removeClass('dt-button');
+
+            table.on('select', function () {
+                $('.selectpicker').prop('disabled', false);
+                $('.selectpicker').selectpicker('refresh');
+                $('#save_button').prop('disabled', false);
+                $('#save_button').removeClass('disabled');
+                $('#save_button').css('cursor', 'auto');
+            });
         });
 
         function getSeries(directory, id) {
@@ -67,7 +137,10 @@
                     $.each(data.data, function (i, item) {
                         $('#'+id).append('<option value="' + item.tmdbid + '" data-subtext="(' + item.year + ')">' + item.title + '</option>');
                     });
-                    $('#'+id).selectpicker({'showSubtext': true});
+                    $('#'+id).selectpicker({
+                        'showSubtext': true,
+                        'noneSelectedText': 'No Matches'
+                    });
                     $('#'+id).selectpicker("refresh");
                 }
             });
