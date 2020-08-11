@@ -11,6 +11,13 @@
 {% endblock bcright %}
 
 {% block body %}
+    <style>
+        table.dataTable tr.selected td.select-checkbox:after, table.dataTable tr.selected th.select-checkbox:after {
+            margin-top: -9px;
+            margin-left: -5px;
+        }
+    </style>
+
     <table id="import_series" class="table table-striped" style="width:100%">
         <thead>
         <tr>
