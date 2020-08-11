@@ -11,13 +11,6 @@
 {% endblock bcright %}
 
 {% block body %}
-    <style>
-        table.dataTable tr.selected td.select-checkbox:after, table.dataTable tr.selected th.select-checkbox:after {
-            margin-top: -9px;
-            margin-left: -5px;
-        }
-    </style>
-
     <table id="import_series" class="table table-striped" style="width:100%">
         <thead>
         <tr>
@@ -157,17 +150,14 @@
             $.ajax({
                 url: "{{ url_for('api.languagesprofiles') }}",
                 success: function (data) {
-                    $('.languages_profiles').empty();
                     var options = ''
                     $.each(data.data, function () {
                         options += '<option value="' + this.id + '">' + this.name + '</option>';
                     });
                     $('.languages_profiles').each( function() {
-                        $(this).html(options);
+                        $(this).append(options);
                         $(this).selectpicker("refresh");
                     })
-                    //$('.languages_profiles').append(options);
-                    //$('.languages_profiles').selectpicker("refresh");
                 }
             });
         }
