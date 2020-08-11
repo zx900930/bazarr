@@ -16,6 +16,8 @@
         <tr>
             <th></th>
             <th>Directory</th>
+            <th>Monitored</th>
+            <th>Language Profile</th>
             <th>Series</th>
         </tr>
         </thead>
@@ -24,31 +26,12 @@
     <nav id="edit_bar" class="navbar fixed-bottom navbar-dark bg-dark">
         <div class="form-check form-check-inline">
             <div class="form-group" style="margin-bottom: 0px;">
-                <label for="languages_select">Language(s): </label>
-                <select class="selectpicker" id="languages_select" name="languages" title="No change" multiple></select>
+                <label for="language_profile_select">Language Profile: </label>
+                <select class="selectpicker" id="language_profile_select" name="language_profile" title="No change"></select>
             </div>
         </div>
         <div class="form-check form-check-inline">
-            <div class="form-group" style="margin-bottom: 0px;">
-                <label for="hi_select">Hearing-Impaired: </label>
-                <select class="selectpicker show-tick" id="hi_select" name="hi" title="No change" multiple>
-                    <option value="False">False</option>
-                    <option value="True">True</option>
-                </select>
-            </div>
-        </div>
-        <div class="form-check form-check-inline">
-            <div class="form-group" style="margin-bottom: 0px;">
-                <label for="forced_select">Forced: </label>
-                <select class="selectpicker show-tick" id="forced_select" name="forced" title="No change" multiple>
-                    <option value="False">False</option>
-                    <option value="True">True</option>
-                    <option value="Both">Both</option>
-                </select>
-            </div>
-        </div>
-        <div class="form-check form-check-inline">
-            <button type="submit" class="btn btn-info" id="save_button">Save</button>
+            <button type="submit" class="btn btn-info" id="import_button">Import</button>
         </div>
     </nav>
 {% endblock body %}
@@ -82,19 +65,36 @@
                     {defaultContent: ""},
                     {
                         data: "directory",
-                        width: "50%"
+                        width: "30%"
+                    },
+                    {
+                        data: null,
+                        render: function () {
+                            return '<select class="monitored selectpicker" data-width="100%"><option value="true">True</option><option value="false">False</option></select>';
+                        },
+                        width: "20%"
+                    },
+                    {
+                        data: null,
+                        render: function () {
+                            return '<select class="languages_profiles selectpicker" data-width="100%"></select>';
+                        },
+                        width: "20%"
                     },
                     {
                         data: null,
                         render: function (data) {
-                            return '<select id="series_' + data.id + '" class="selectpicker" data-directory="' + data.directory + '" data-width="100%"></select>';
+                            return '<select id="series_' + data.id + '" class="series_matches selectpicker" data-directory="' + data.directory + '" data-width="100%"></select>';
                         },
-                        width: "50%"
+                        width: "30%"
                     }
                 ],
                 initComplete: function() {
-                    $('.selectpicker').selectpicker('refresh');
-                    $('.selectpicker').each( function() {
+                    $('.monitored').selectpicker("refresh");
+
+                    getLanguagesProfiles();
+
+                    $('.series_matches').each( function() {
                         getSeries($(this).attr('data-directory'), $(this).attr('id'));
                     })
                 }
@@ -121,11 +121,11 @@
             btns.removeClass('dt-button');
 
             table.on('select', function () {
-                $('.selectpicker').prop('disabled', false);
-                $('.selectpicker').selectpicker('refresh');
-                $('#save_button').prop('disabled', false);
-                $('#save_button').removeClass('disabled');
-                $('#save_button').css('cursor', 'auto');
+                $('#language_profile_select').prop('disabled', false);
+                $('#language_profile_select').selectpicker('refresh');
+                $('#import_button').prop('disabled', false);
+                $('#import_button').removeClass('disabled');
+                $('#import_button').css('cursor', 'auto');
             });
         });
 
@@ -142,6 +142,25 @@
                         'noneSelectedText': 'No Matches'
                     });
                     $('#'+id).selectpicker("refresh");
+                }
+            });
+        }
+
+        function getLanguagesProfiles() {
+            $.ajax({
+                url: "{{ url_for('api.languagesprofiles') }}",
+                success: function (data) {
+                    $('.languages_profiles').empty();
+                    var options = ''
+                    $.each(data.data, function () {
+                        options += '<option value="' + this.id + '">' + this.name + '</option>';
+                    });
+                    $('.languages_profiles').each( function() {
+                        $(this).html(options);
+                        $(this).selectpicker("refresh");
+                    })
+                    //$('.languages_profiles').append(options);
+                    //$('.languages_profiles').selectpicker("refresh");
                 }
             });
         }

@@ -111,6 +111,21 @@ class Languages(Resource):
         return jsonify(result)
 
 
+class LanguagesProfiles(Resource):
+    def get(self):
+        result = [
+            {
+                'id': 1,
+                'name': 'French'
+            },
+            {
+                'id': 2,
+                'name': 'English'
+            }
+        ]
+        return jsonify(data=result)
+
+
 class Notifications(Resource):
     @authenticate
     def get(self):
@@ -1834,6 +1849,7 @@ api.add_resource(Restart, '/restart')
 
 api.add_resource(Badges, '/badges')
 api.add_resource(Languages, '/languages')
+api.add_resource(LanguagesProfiles, '/languages_profiles')
 api.add_resource(Notifications, '/notifications')
 
 api.add_resource(Search, '/search_json')
