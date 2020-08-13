@@ -27,7 +27,10 @@ def db_init():
         logging.info('BAZARR Database created successfully')
 
 
-database = Sqlite3Worker(os.path.join(args.config_dir, 'db', 'bazarr.db'), max_queue_size=256, as_dict=True)
+database = Sqlite3Worker(os.path.join(args.config_dir, 'db', 'bazarr.db'),
+                         max_queue_size=256,
+                         as_dict=True,
+                         foreign_keys=True)
 
 
 class SqliteDictConverter:
@@ -88,41 +91,8 @@ dict_mapper = SqliteDictPathMapper()
 
 
 def db_upgrade():
-    columnToAdd = [
-        ['table_shows', 'year', 'text'],
-        ['table_shows', 'alternateTitles', 'text'],
-        ['table_shows', 'forced', 'text', 'False'],
-        ['table_shows', 'tags', 'text', '[]'],
-        ['table_shows', 'seriesType', 'text', ''],
-        ['table_episodes', 'format', 'text'],
-        ['table_episodes', 'resolution', 'text'],
-        ['table_episodes', 'video_codec', 'text'],
-        ['table_episodes', 'audio_codec', 'text'],
-        ['table_episodes', 'episode_file_id', 'integer'],
-        ['table_movies', 'sortTitle', 'text'],
-        ['table_movies', 'year', 'text'],
-        ['table_movies', 'alternativeTitles', 'text'],
-        ['table_movies', 'format', 'text'],
-        ['table_movies', 'resolution', 'text'],
-        ['table_movies', 'video_codec', 'text'],
-        ['table_movies', 'audio_codec', 'text'],
-        ['table_movies', 'imdbId', 'text'],
-        ['table_movies', 'forced', 'text', 'False'],
-        ['table_movies', 'movie_file_id', 'integer'],
-        ['table_movies', 'tags', 'text', '[]'],
-        ['table_history', 'video_path', 'text'],
-        ['table_history', 'language', 'text'],
-        ['table_history', 'provider', 'text'],
-        ['table_history', 'score', 'text'],
-        ['table_history', 'subs_id', 'text'],
-        ['table_history', 'subtitles_path', 'text'],
-        ['table_history_movie', 'video_path', 'text'],
-        ['table_history_movie', 'language', 'text'],
-        ['table_history_movie', 'provider', 'text'],
-        ['table_history_movie', 'score', 'text'],
-        ['table_history_movie', 'subs_id', 'text'],
-        ['table_history_movie', 'subtitles_path', 'text']
-    ]
+    # ['table_history_movie', 'subtitles_path', 'text']
+    columnToAdd = []
 
     for column in columnToAdd:
         try:
@@ -132,24 +102,6 @@ def db_upgrade():
                 database.execute('''ALTER TABLE {0} ADD COLUMN "{1}" "{2}" DEFAULT "{3}"'''.format(column[0], column[1], column[2], column[3]))
         except:
             pass
-
-    # Fix null languages, hearing-impaired and forced for series and movies.
-    database.execute("UPDATE table_shows SET languages = '[]' WHERE languages is null")
-    database.execute("UPDATE table_shows SET hearing_impaired = 'False' WHERE hearing_impaired is null")
-    database.execute("UPDATE table_shows SET forced = 'False' WHERE forced is null")
-    database.execute("UPDATE table_movies SET languages = '[]' WHERE languages is null")
-    database.execute("UPDATE table_movies SET hearing_impaired = 'False' WHERE hearing_impaired is null")
-    database.execute("UPDATE table_movies SET forced = 'False' WHERE forced is null")
-
-    # Create blacklist tables
-    database.execute("CREATE TABLE IF NOT EXISTS table_blacklist (sonarr_series_id integer, sonarr_episode_id integer, "
-                     "timestamp integer, provider text, subs_id text, language text)")
-    database.execute("CREATE TABLE IF NOT EXISTS table_blacklist_movie (radarr_id integer, timestamp integer, "
-                     "provider text, subs_id text, language text)")
-
-    # Create root_directories tables
-    database.execute("CREATE TABLE IF NOT EXISTS table_rootdir (id INTEGER PRIMARY KEY, path text)")
-    database.execute("CREATE TABLE IF NOT EXISTS table_rootdir_movie (id INTEGER PRIMARY KEY, path text)")
 
 
 def filter_exclusions(dicts_list, type):

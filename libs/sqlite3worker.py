@@ -52,7 +52,7 @@ class Sqlite3Worker(threading.Thread):
         sql_worker.execute("SELECT * from tester")
         sql_worker.close()
     """
-    def __init__(self, file_name, max_queue_size=100, as_dict=False):
+    def __init__(self, file_name, max_queue_size=100, as_dict=False, foreign_keys=False):
         """Automatically starts the thread.
 
         Args:
@@ -67,6 +67,8 @@ class Sqlite3Worker(threading.Thread):
             detect_types=sqlite3.PARSE_DECLTYPES)
         if as_dict:
             self.sqlite3_conn.row_factory = dict_factory
+        if foreign_keys:
+            self.sqlite3_conn.execute("PRAGMA foreign_keys = 1")
         self.sqlite3_cursor = self.sqlite3_conn.cursor()
         self.sql_queue = Queue.Queue(maxsize=max_queue_size)
         self.results = {}

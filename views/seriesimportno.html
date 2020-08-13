@@ -16,7 +16,7 @@
         <tr>
             <th></th>
             <th>Directory</th>
-            <th>Monitored</th>
+            <th>Monitor</th>
             <th>Language Profile</th>
             <th>Series</th>
         </tr>
@@ -26,12 +26,18 @@
     <nav id="edit_bar" class="navbar fixed-bottom navbar-dark bg-dark">
         <div class="form-check form-check-inline">
             <div class="form-group" style="margin-bottom: 0px;">
-                <label for="language_profile_select">Language Profile: </label>
-                <select class="selectpicker" id="language_profile_select" name="language_profile" title="No change"></select>
+                <label for="language_profile_select">Monitor: </label>
+                <select class="selectpicker" id="monitor_select" name="monitor_select"><option value="true">True</option><option value="false">False</option></select>
             </div>
         </div>
         <div class="form-check form-check-inline">
-            <button type="submit" class="btn btn-info" id="import_button">Import</button>
+            <div class="form-group" style="margin-bottom: 0px;">
+                <label for="language_profile_select">Language Profile: </label>
+                <select class="selectpicker" id="language_profile_select" name="language_profile_select"></select>
+            </div>
+        </div>
+        <div class="form-check form-check-inline">
+            <button type="submit" class="btn btn-info" id="import_button">Import <span id="selected_series_count">0</span> Series</span></button>
         </div>
     </nav>
 {% endblock body %}
@@ -51,6 +57,7 @@
                 lengthChange: false,
                 responsive: true,
                 paging: false,
+                info: false,
                 ajax: "{{ url_for('api.getseries') }}?root_dir={{id}}",
                 columnDefs: [{
                     orderable: false,
@@ -70,7 +77,7 @@
                     {
                         data: null,
                         render: function () {
-                            return '<select class="monitored selectpicker" data-width="100%"><option value="true">True</option><option value="false">False</option></select>';
+                            return '<select class="monitor selectpicker" data-width="100%"><option value="true">True</option><option value="false">False</option></select>';
                         },
                         width: "20%"
                     },
@@ -90,7 +97,7 @@
                     }
                 ],
                 initComplete: function() {
-                    $('.monitored').selectpicker("refresh");
+                    $('.monitor').selectpicker("refresh");
 
                     getLanguagesProfiles();
 
@@ -120,12 +127,36 @@
             btns.addClass('btn btn-outline');
             btns.removeClass('dt-button');
 
+            $('#monitor_select').prop('disabled', true);
+            $('#monitor_select').selectpicker('refresh');
+            $('#language_profile_select').prop('disabled', true);
+            $('#language_profile_select').selectpicker('refresh');
+            $('#import_button').prop('disabled', true);
+            $('#import_button').addClass('disabled');
+            $('#import_button').css('cursor', 'not-allowed');
+
             table.on('select', function () {
+                $('#monitor_select').prop('disabled', false);
+                $('#monitor_select').selectpicker('refresh');
                 $('#language_profile_select').prop('disabled', false);
                 $('#language_profile_select').selectpicker('refresh');
                 $('#import_button').prop('disabled', false);
                 $('#import_button').removeClass('disabled');
-                $('#import_button').css('cursor', 'auto');
+                $('#import_button').css('cursor', 'pointer');
+                $('#selected_series_count').text(table.rows('.selected').count());
+            });
+
+            table.on('deselect', function () {
+                if (table.rows('.selected').count() === 0) {
+                    $('#monitor_select').prop('disabled', true);
+                    $('#monitor_select').selectpicker('refresh');
+                    $('#language_profile_select').prop('disabled', true);
+                    $('#language_profile_select').selectpicker('refresh');
+                    $('#import_button').prop('disabled', true);
+                    $('#import_button').addClass('disabled');
+                    $('#import_button').css('cursor', 'not-allowed');
+                }
+                $('#selected_series_count').text(table.rows('.selected').count());
             });
         });
 
@@ -135,7 +166,7 @@
                 success: function (data) {
                     $('#'+id).empty();
                     $.each(data.data, function (i, item) {
-                        $('#'+id).append('<option value="' + item.tmdbid + '" data-subtext="(' + item.year + ')">' + item.title + '</option>');
+                        $('#'+id).append('<option value="' + item.tmdbId + '" data-subtext="(' + item.year + ')">' + item.title + '</option>');
                     });
                     $('#'+id).selectpicker({
                         'showSubtext': true,
@@ -154,10 +185,9 @@
                     $.each(data.data, function () {
                         options += '<option value="' + this.id + '">' + this.name + '</option>';
                     });
-                    $('.languages_profiles').each( function() {
-                        $(this).append(options);
-                        $(this).selectpicker("refresh");
-                    })
+                    $('.languages_profiles, #language_profile_select').empty();
+                    $('.languages_profiles, #language_profile_select').append(options);
+                    $('.languages_profiles, #language_profile_select').selectpicker("refresh");
                 }
             });
         }

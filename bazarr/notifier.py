@@ -16,7 +16,7 @@ def update_notifier():
     notifiers_new = []
     notifiers_old = []
 
-    notifiers_current_db = database.execute("SELECT name FROM table_settings_notifier")
+    notifiers_current_db = database.execute("SELECT name FROM t_notifier")
 
     notifiers_current = []
     for notifier in notifiers_current_db:
@@ -31,14 +31,14 @@ def update_notifier():
 
     notifiers_to_delete = [item for item in notifiers_current if item not in notifiers_old]
 
-    database.execute("INSERT INTO table_settings_notifier (name, enabled) VALUES (?, ?)", notifiers_new,
+    database.execute("INSERT INTO t_notifier (name, enabled) VALUES (?, ?)", notifiers_new,
                      execute_many=True)
 
-    database.execute("DELETE FROM table_settings_notifier WHERE name=?", notifiers_to_delete, execute_many=True)
+    database.execute("DELETE FROM t_notifier WHERE name=?", notifiers_to_delete, execute_many=True)
 
 
 def get_notifier_providers():
-    providers = database.execute("SELECT name, url FROM table_settings_notifier WHERE enabled=1")
+    providers = database.execute("SELECT name, url FROM t_notifier WHERE enabled=1")
 
     return providers
 

@@ -11,7 +11,7 @@ def list_series_directories(root_dir):
     series_directories = []
 
     try:
-        root_dir_path = database.execute("SELECT path FROM table_rootdir WHERE id=?", (root_dir,),
+        root_dir_path = database.execute("SELECT path FROM t_rootdir WHERE id=?", (root_dir,),
                                          only_one=True)['path']
     except:
         pass
@@ -28,7 +28,7 @@ def list_series_directories(root_dir):
                     {
                         'id': i,
                         'directory': directory_temp,
-                        'root_dir': root_dir
+                        'rootDir': root_dir
                     }
                 )
     finally:
@@ -54,9 +54,9 @@ def get_series_match(directory):
                     year = item['first_air_date'][:4]
                 matching_series.append(
                     {
-                        'title': item['name'],
+                        'title': item['original_name'],
                         'year': year or 'n/a',
-                        'tmdbid': item['id']
+                        'tmdbId': item['id']
                     }
                 )
         return matching_series
@@ -76,14 +76,31 @@ def get_series_metadata(tmdbid):
             images_url = 'https://image.tmdb.org/t/p/original{0}'
 
             series_metadata = {
-                'title': series_info['name'],
+                'title': series_info['original_name'],
+                'sortTitle': normalize_title(series_info['original_name']),
                 'year': series_info['first_air_date'][:4],
-                'tmdb_id': tmdbid,
+                'tmdbId': tmdbid,
                 'overview': series_info['overview'],
                 'poster': images_url.format(series_info['poster_path']),
                 'fanart': images_url.format(series_info['backdrop_path']),
-                'alternative_titles': [x['title'] for x in alternative_titles['results']],
-                'tvdb_id': external_ids['tvdb_id']
+                'alternateTitles': [x['title'] for x in alternative_titles['results']],
+                'tvdbId': external_ids['tvdb_id']
             }
 
         return series_metadata
+
+
+def normalize_title(title):
+    WordDelimiterRegex = re.compile(r"(\s|\.|,|_|-|=|\|)+")
+    PunctuationRegex = re.compile(r"[^\w\s]")
+    CommonWordRegex = re.compile(r"\b(a|an|the|and|or|of)\b\s?")
+    DuplicateSpacesRegex = re.compile(r"\s{2,}")
+
+    title = title.lower()
+
+    title = re.sub(WordDelimiterRegex, " ", title)
+    title = re.sub(PunctuationRegex, "", title)
+    title = re.sub(CommonWordRegex, "", title)
+    title = re.sub(DuplicateSpacesRegex, " ", title)
+
+    return title.strip()

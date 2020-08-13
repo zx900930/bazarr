@@ -271,7 +271,7 @@ class SystemReleases(Resource):
 
 class GetSeriesRootDir(Resource):
     def get(self):
-        series_root_dir = database.execute("SELECT * FROM table_rootdir")
+        series_root_dir = database.execute("SELECT * FROM t_rootdir")
         return jsonify(data=series_root_dir)
 
 
