@@ -397,9 +397,9 @@
     <script>
         {% if not request.endpoint == 'login_page' %}
         $(document).ready(function () {
-            BadgesAjax('series');
-            BadgesAjax('movies');
-            BadgesAjax('providers');
+            //BadgesAjax('series');
+            //BadgesAjax('movies');
+            //BadgesAjax('providers');
 
             $(window).on( 'ready orientationchange resize', function() {
                 adjustResponsiveUI();
@@ -438,11 +438,11 @@
             events.on('event', function (event) {
                 var event_json_badges = JSON.parse(event);
                 if (event_json_badges.type === 'badges_series') {
-                    BadgesAjax('series');
+                    //BadgesAjax('series');
                 } else if (event_json_badges.type === 'badges_movies') {
-                    BadgesAjax('movies');
+                    //BadgesAjax('movies');
                 } else if (event_json_badges.type === 'badges_providers') {
-                    BadgesAjax('providers');
+                    //BadgesAjax('providers');
                 }
             });
 
