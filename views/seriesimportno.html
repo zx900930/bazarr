@@ -27,7 +27,7 @@
         <div class="form-check form-check-inline">
             <div class="form-group" style="margin-bottom: 0px;">
                 <label for="language_profile_select">Monitor: </label>
-                <select class="selectpicker" id="monitor_select" name="monitor_select"><option value="true">True</option><option value="false">False</option></select>
+                <select class="selectpicker" id="monitor_select" name="monitor_select"><option value="1">True</option><option value="0">False</option></select>
             </div>
         </div>
         <div class="form-check form-check-inline">
@@ -77,14 +77,14 @@
                     {
                         data: null,
                         render: function () {
-                            return '<select class="monitor selectpicker" data-width="100%"><option value="true">True</option><option value="false">False</option></select>';
+                            return '<select class="monitor selectpicker" data-width="100%"><option value="1">True</option><option value="0">False</option></select>';
                         },
                         width: "20%"
                     },
                     {
                         data: null,
                         render: function () {
-                            return '<select class="languages_profiles selectpicker" data-width="100%"></select>';
+                            return '<select class="languages_profiles selectpicker" data-width="100%"><option ""> </option></select>';
                         },
                         width: "20%"
                     },
@@ -158,6 +158,20 @@
                 }
                 $('#selected_series_count').text(table.rows('.selected').count());
             });
+
+            $('#monitor_select').on("changed.bs.select", function() {
+                $.each(table.rows('.selected').nodes().to$(), function () {
+                    $(this).find('select.monitor').selectpicker('val', $('#monitor_select').selectpicker('val'));
+                    $(this).find('select.monitor').selectpicker("refresh");
+                })
+            });
+
+            $('#language_profile_select').on('changed.bs.select', function() {
+                $.each(table.rows('.selected').nodes().to$(), function () {
+                    $(this).find('select.languages_profiles').prop('selectedIndex', $('#language_profile_select').selectpicker('val')-1);
+                    $(this).find('select.languages_profiles').selectpicker("refresh");
+                })
+            });
         });
 
         function getSeries(directory, id) {
@@ -181,7 +195,7 @@
             $.ajax({
                 url: "{{ url_for('api.languagesprofiles') }}",
                 success: function (data) {
-                    var options = ''
+                    let options = '';
                     $.each(data.data, function () {
                         options += '<option value="' + this.id + '">' + this.name + '</option>';
                     });
